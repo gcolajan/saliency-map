@@ -11,6 +11,6 @@ namespace SaliencyMap
     {
         void AddPoint(int x, int y);
         void Build();
-        Bitmap GetGraphic();
+        Bitmap GetGraphic(int colors);
     }
 }

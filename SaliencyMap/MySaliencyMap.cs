@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SaliencyMap.Tools;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -21,7 +22,7 @@ namespace SaliencyMap
         protected int width;
         protected int height;
         protected int[][] squares;
-        protected int[][] cat;
+        protected List<int> sortedOccurrences;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MySaliencyMap"/> class.
@@ -49,10 +50,6 @@ namespace SaliencyMap
             squares = new int[width][];
             for (int i = 0; i < squares.Length; i++)
                 squares[i] = new int[height];
-
-            cat = new int[width][];
-            for (int i = 0; i < cat.Length; i++)
-                cat[i] = new int[height];
         }
 
 
@@ -65,45 +62,36 @@ namespace SaliencyMap
         public void Build()
         {
             // TODO: insertion sort
-            List<int> flattened = new List<int>();
+            sortedOccurrences = new List<int>();
             for (int x = 0; x < width; x++)
                 for (int y = 0; y < height; y++)
-                    flattened.Add(squares[x][y]);
-            flattened.Sort();
-
-            int firstQuartile = flattened[flattened.Count/4];
-            int mediane = flattened[flattened.Count/2];
-            int lastQuartile = flattened[(3*flattened.Count)/4];
-
-            int value;
-            for (int x = 0; x < width; x++)
-            {
-                for (int y = 0; y < height; y++)
-                {
-                    value = squares[x][y];
-                    if (value <= firstQuartile)
-                        cat[x][y] = 0;
-                    else if (value <= mediane)
-                        cat[x][y] = 1;
-                    else if (value <= lastQuartile)
-                        cat[x][y] = 2;
-                    else
-                        cat[x][y] = 3;
-                }
-            }
+                    sortedOccurrences.Add(squares[x][y]);
+            sortedOccurrences.Sort();
         }
 
-        public Bitmap GetGraphic()
+        public Bitmap GetGraphic(int colors)
         {
-            Color[] colors = { Color.FromArgb(50, 0, 0, 0), Color.FromArgb(25, 0, 0, 0), Color.FromArgb(50, 0, 0, 0), Color.FromArgb(100, 0, 0, 0) };
-
+            // Working size
             Bitmap bitmap = new Bitmap(width, height);
+
+            // Original size of the picture
             Bitmap result = new Bitmap(actualWidth, actualHeight);
 
             // Setting pixel on the small bitmap
             for (int x = 0; x < width; x++)
+            {
                 for (int y = 0; y < height; y++)
-                    bitmap.SetPixel(x, y, colors[cat[x][y]]);
+                {
+                    int q;
+                    int v = squares[x][y];
+                    for (q = 0; q < colors; q++)
+                        if (v >= sortedOccurrences[q] && v <= sortedOccurrences[q+1])
+                            break;
+
+                    bitmap.SetPixel(x, y, GradualColor.Get((float) q / colors));
+                }
+            }
+
 
             // Resize the map to the original size
             using (Graphics g = Graphics.FromImage(result))

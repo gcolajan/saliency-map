@@ -82,11 +82,19 @@ namespace SaliencyMap
             {
                 for (int y = 0; y < height; y++)
                 {
-                    int q;
+                    int q, lowerBound, upperBound;
                     int v = squares[x][y];
+
+                    lowerBound = 0;
                     for (q = 0; q < colors; q++)
-                        if (v >= sortedOccurrences[q] && v <= sortedOccurrences[q+1])
+                    {
+                        upperBound = (int)(((float)(q + 1) / colors) * sortedOccurrences.Count) - 1;
+                        if (v >= sortedOccurrences[lowerBound] && v <= sortedOccurrences[upperBound])
                             break;
+
+                        lowerBound = upperBound + 1;
+                    }
+
 
                     bitmap.SetPixel(x, y, GradualColor.Get((float) q / colors));
                 }

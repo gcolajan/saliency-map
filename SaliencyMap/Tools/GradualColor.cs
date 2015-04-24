@@ -46,8 +46,6 @@ namespace SaliencyMap.Tools
                 G = 1023 - indice;
                 B = 0;
             }
-
-            Console.WriteLine(indice + " " + R + " " + G + " " + B);
             
             return Color.FromArgb(R, G, B);
         }

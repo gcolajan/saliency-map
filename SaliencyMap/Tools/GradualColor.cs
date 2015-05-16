@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SaliencyMap.Tools
 {
     public static class GradualColor
     {
         /// <summary>
-        /// Require a percentage [0;1]
+        ///     Require a percentage [0;1]
         /// </summary>
         /// <param name="percentage">The percentage.</param>
         /// <returns>Returns a Color between Blue (low percentage) and Red (high percentage).</returns>
@@ -20,7 +16,7 @@ namespace SaliencyMap.Tools
                 throw new Exception("GradualColor.Get accept only [0f;1f] percentages.");
 
             int R, G, B;
-            int indice = (int) (percentage * 1023);
+            var indice = (int) (percentage*1023);
 
             if (indice < 256)
             {
@@ -46,7 +42,7 @@ namespace SaliencyMap.Tools
                 G = 1023 - indice;
                 B = 0;
             }
-            
+
             return Color.FromArgb(R, G, B);
         }
     }

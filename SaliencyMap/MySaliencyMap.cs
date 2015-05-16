@@ -1,111 +1,102 @@
-﻿using SaliencyMap.Tools;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Drawing.Drawing2D;
+using SaliencyMap.Tools;
 
 namespace SaliencyMap
 {
     public class MySaliencyMap : ISaliencyMap
     {
-        const float COEFF_CENTER = 1f;
-        const float COEFF_FIRST = 0.5f;
-        const float COEFF_SECOND = 0.25f;
-
-        protected int actualWidth;
-        protected int actualHeight;
-        protected int precision;
-        protected int nbPoints;
-
-        protected int width;
-        protected int height;
-        protected int[][] squares;
-        protected List<int> sortedOccurrences;
+        private const float CoeffCenter = 1f;
+        private const float CoeffFirst = 0.5f;
+        private const float CoeffSecond = 0.25f;
+        private readonly int _actualHeight;
+        private readonly int _actualWidth;
+        private readonly int _precision;
+        private readonly int _processHeight;
+        private readonly int _processWidth;
+        private List<int> _sortedOccurrences;
+        private readonly int[][] _squares;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MySaliencyMap"/> class.
+        ///     Initializes a new instance of the <see cref="MySaliencyMap" /> class.
         /// </summary>
-        /// <param name="width">The width.</param>
-        /// <param name="height">The height.</param>
+        /// <param name="originalWidth">The width.</param>
+        /// <param name="originalHeight">The height.</param>
         /// <param name="areaSize">Size of the area.</param>
         public MySaliencyMap(int originalWidth, int originalHeight, int areaSize)
         {
-            actualWidth = originalWidth;
-            actualHeight = originalHeight;
-            precision = areaSize;
-            nbPoints = 0;
+            _actualWidth = originalWidth;
+            _actualHeight = originalHeight;
+            _precision = areaSize;
 
             // If areaSize is not ajusted with the dimension of the source, last border can't have good results
-            width = actualWidth / areaSize;
-            height = actualHeight / areaSize;
+            _processWidth = _actualWidth/areaSize;
+            _processHeight = _actualHeight/areaSize;
 
-            if (actualWidth % areaSize > 0)
-                width += 1;
+            if (_actualWidth%areaSize > 0)
+                _processWidth += 1;
 
-            if (actualHeight % areaSize > 0)
-                height += 1;
+            if (_actualHeight%areaSize > 0)
+                _processHeight += 1;
 
-            squares = new int[width][];
-            for (int i = 0; i < squares.Length; i++)
-                squares[i] = new int[height];
+            _squares = new int[_processWidth][];
+            for (var i = 0; i < _squares.Length; i++)
+                _squares[i] = new int[_processHeight];
         }
-
 
         public void AddPoint(int x, int y)
         {
-            squares[x / precision][y / precision]++;
-            nbPoints++;
+            _squares[x/_precision][y/_precision]++;
         }
 
         public void Build()
         {
             // TODO: insertion sort
-            sortedOccurrences = new List<int>();
-            for (int x = 0; x < width; x++)
-                for (int y = 0; y < height; y++)
-                    sortedOccurrences.Add(squares[x][y]);
-            sortedOccurrences.Sort();
+            _sortedOccurrences = new List<int>();
+            for (var x = 0; x < _processWidth; x++)
+                for (var y = 0; y < _processHeight; y++)
+                    _sortedOccurrences.Add(_squares[x][y]);
+            _sortedOccurrences.Sort();
         }
 
         public Bitmap GetGraphic(int colors)
         {
             // Working size
-            Bitmap bitmap = new Bitmap(width, height);
+            var bitmap = new Bitmap(_processWidth, _processHeight);
 
             // Original size of the picture
-            Bitmap result = new Bitmap(actualWidth, actualHeight);
+            var result = new Bitmap(_actualWidth, _actualHeight);
 
             // Setting pixel on the small bitmap
-            for (int x = 0; x < width; x++)
+            for (var x = 0; x < _processWidth; x++)
             {
-                for (int y = 0; y < height; y++)
+                for (var y = 0; y < _processHeight; y++)
                 {
                     int q, lowerBound, upperBound;
-                    int v = squares[x][y];
+                    var v = _squares[x][y];
 
                     lowerBound = 0;
                     for (q = 0; q < colors; q++)
                     {
-                        upperBound = (int)(((float)(q + 1) / colors) * sortedOccurrences.Count) - 1;
-                        if (v >= sortedOccurrences[lowerBound] && v <= sortedOccurrences[upperBound])
+                        upperBound = (int) (((float) (q + 1)/colors)*_sortedOccurrences.Count) - 1;
+                        if (v >= _sortedOccurrences[lowerBound] && v <= _sortedOccurrences[upperBound])
                             break;
 
                         lowerBound = upperBound + 1;
                     }
 
 
-                    bitmap.SetPixel(x, y, GradualColor.Get((float) q / colors));
+                    bitmap.SetPixel(x, y, GradualColor.Get((float) q/colors));
                 }
             }
 
 
             // Resize the map to the original size
-            using (Graphics g = Graphics.FromImage(result))
+            using (var g = Graphics.FromImage(result))
             {
-                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear;
-                g.DrawImage(bitmap, 0, 0, actualWidth, actualHeight);
+                g.InterpolationMode = InterpolationMode.HighQualityBilinear;
+                g.DrawImage(bitmap, 0, 0, _actualWidth, _actualHeight);
             }
             return result;
         }
